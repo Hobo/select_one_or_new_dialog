@@ -1,1 +1,82 @@
 <%# tag definitions for the select_one_or_new_dialog plugin %>
+
+<!--
+Defines a `<select-one>` and a button that brings up an `<dialog-box>` containing a form allowing you to enter a new item.  After the form is filled in and closed, the `<select-one>` is changed to select the new item.
+
+### Caveats
+
+`select-one-or-new-dialog` is a very simple control that depends on a large number of Hobo and hobo-jquery components to be working correctly in the standard manner.   These include ajax, a standard form context, and formlets.
+
+#### sort order
+
+The javascript for this control is a quick hack that assumes the new item created will be the last item in the select.   If you've defined a sort order, this assumption will be broken.   It will also be broken if there are more items than the select-one limit.
+
+#### parameterizing parts
+
+Because the select-one is a part, it cannot be parameterized.  However, you can adjust its definition by defining the polymorphic input for the type:
+
+    <def tag="input" for="StoryStatus">
+      <select-one include-none="&false" />
+    </def>
+
+#### controller actions
+
+For Hobo ajax to work, standard controller actions are required.   If you have customized the sub-item's create action, you may break select-one-or-new-dialog.
+
+There is one case where you have to customize the create action.   For Ajax to work, Hobo has to resurrect the context.   This is straightforward if the parent context exists in the database.   If it does not, then Hobo uses whatever 'this' is created by the controller action.   In our case, this is usually the wrong thing.
+
+Example:
+
+    class Story
+      hobo_model
+      fields do
+        name :string
+      end
+      belongs_to :story_status
+      # plus permissions, etc...
+    end
+
+app/views/stories/new.dryml:
+
+    <new-page>
+      <field-list:>
+        <story-status-view:>
+          <select-one-or-new-dialog/>
+        </story-status-view:>
+      </field-list:>
+    </new-page>
+
+app/controllers/story_statuses_controller.rb:
+
+    class StoryStatusesController < ApplicationController
+      def create
+        hobo_create do
+          if request.xhr?
+            self.this = Story.new
+          end
+        end
+      end
+    end
+
+Just to be clear, you shouldn't need any special controller actions if
+you are using inside of edit forms.  It's only when you're using it
+inside of a new form that Hobo cannot load the object from the
+database so you have to tell it the context.
+
+FIXME: translate 'or', 'New', 'cancel', 'ok'.
+
+-->
+<def tag="select-one-or-new-dialog">
+  <% dialog_id="dialog-#{typed_id.gsub(':', '-')}" %>
+  <% part_id = "select-one-#{typed_id.gsub(':', '-')}" %>
+  <input part="select-one-or-new-dialog-select" id="#{part_id}" />
+  <span param="or">or</span>
+  <dialog-open-button dialog="##{dialog_id}" param>
+    New <%= this_field_name %>
+  </dialog-open-button>
+  <dialog-box param buttons='&[["cancel", "hjq_dialog_box.close"], ["ok", "hjq_dialog_box.submitAndClose"]]' title="New #{this_field.humanize}" id="&dialog_id" > 
+    <formlet with="&this_type.new" update="&part_id" success="jQuery('##{part_id} select').val(jQuery('##{part_id} option:last').val())">
+      <field-list param/>
+    </formlet>
+  </dialog-box>
+</def>

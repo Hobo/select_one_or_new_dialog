@@ -1,4 +1,5 @@
-Provides the `<select-one-or-new-dialog>` tag to Hobo.
+Provides the `<select-one-or-new-dialog>` tag to Hobo.  It was removed
+from the main hobo_jquery plugin because it has some important limitations.
 
 ### Installation
 
