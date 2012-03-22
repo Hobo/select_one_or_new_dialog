@@ -5,7 +5,7 @@ from the main hobo_jquery plugin because it has some important limitations.
 
 It can be installed into a Hobo app by typing:
 
-    hobo generate install_plugin  git://github.com/bryanlarsen/select_one_or_new_dialog.git
+    hobo generate install_plugin  git://github.com/Hobo/select_one_or_new_dialog.git
 
 ### License
 
